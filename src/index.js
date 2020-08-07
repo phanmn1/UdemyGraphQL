@@ -10,8 +10,17 @@ const users = [
 ]
 
 const posts = [
-    {id: '1', title: 'On how to detail graphql queries', body: 'Ipsum lorum bla bla bla', published: false},
-    {id: '2', title: 'Testing CI/CD dependencies', body: 'First off why do I need to do graphql', published: true}
+    {id: '1', title: 'On how to detail graphql queries', body: 'Ipsum lorum bla bla bla', published: false, author: '1'},
+    {id: '2', title: 'Testing CI/CD dependencies', body: 'First off why do I need to do graphql', published: true, author: '2'},
+    {id: '3', title: 'GraphQL Intro course', body: 'adfadfadfadfasdfasdf', published: true, author: '2'}
+    
+]
+
+const comments = [
+    {id: '1', text: 'Test Comment 1', author: '2', post: '1'},
+    {id: '2', text: 'Test Comment 2', author: '1', post: '3'},
+    {id: '3', text: 'Test Comment 3', author: '3', post: '2'},
+    {id: '4', text: 'Test Comment 4', author: '1', post: '2'}
 ]
 
 // Type definitions (schema)
@@ -21,13 +30,16 @@ const typeDefs = `
         post: Post!
         users(query: String): [User!]!
         posts(query: String): [Post!]!
+        comments: [Comment!]!
     }
 
     type User {
         id: ID!
         name: String! 
         email: String!
-        age: Int
+        age: Int,
+        posts: [Post!]!
+        comments: [Comment!]!
     }
 
     type Post {
@@ -35,6 +47,15 @@ const typeDefs = `
         title: String!
         body: String!
         published: Boolean!
+        author: User!
+        comments: [Comment!]!
+    }
+
+    type Comment {
+        id: ID!
+        text: String! 
+        author: User!
+        post: Post!
     }
 `
 
@@ -77,7 +98,36 @@ const resolvers = {
                 published: true
             }
         }, 
+        comments() {
+            return comments
+        }
+    }, 
+    Post: {
+        author(parent, args, ctx, info) {
+            return users.find((user) => user.id === parent.author)
+        },
+        comments(parent, args, ctx, info) {
+            return comments.filter((comment) => comment.post === parent.id)
+        }
+    },
+    User: {
+        posts(parent, args, ctx, info) {
+            return posts.filter((post) => post.author === parent.id)
+        },
+        comments(parent, args, ctx, info) {
+            return comments.filter((comment) => comment.author == parent.id)
+        }
+
+    },
+    Comment: {
+        author(parent, args, ctx, info) {
+            return users.find(user => user.id === parent.author)
+        }, 
+        post(parent, args, ctx, info) {
+            return posts.find((post) => post.id === parent.post)
+        }
     }
+
 }
 
 const server = new GraphQLServer({
