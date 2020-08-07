@@ -1,4 +1,5 @@
 import { GraphQLServer } from 'graphql-yoga'
+import uuidv4 from 'uuid/v4';
 
 // Scalar types - String, Boolean, Int, Float, ID
 
@@ -31,6 +32,19 @@ const typeDefs = `
         users(query: String): [User!]!
         posts(query: String): [Post!]!
         comments: [Comment!]!
+    }
+
+    type Mutation {
+        createUser(data: CreateUserInput): User!
+        createPost(title: String!, body: String!, published: Boolean!, author: ID!) : Post! 
+        createComment(text: String!, author: ID!, post: ID!) : Comment!
+
+    }
+
+    input CreateUserInput {
+        name: String! 
+        email: String! 
+        age: Int
     }
 
     type User {
@@ -102,6 +116,54 @@ const resolvers = {
             return comments
         }
     }, 
+
+    Mutation: {
+        createUser(parent, args, ctx, info) {
+            const emailTaken = users.some((user) => user.email === args.data.email)
+
+            if(emailTaken) {
+                throw new Error('Email taken')
+            }
+
+            const user = {
+                id: uuidv4(), 
+                ...args.data
+            }
+
+            users.push(user)
+            return user
+        }, 
+        createPost(parent, args, ctx, info) {
+            const userExists = users.some((user) => user.id === args.author)
+
+            if(!userExists) {
+                throw new Error('User not found')
+            }
+
+            const post = {
+                id: uuidv4(), 
+                ...args
+            }
+
+            posts.push(post)
+            return post
+        }, 
+        createComment(parent, args, ctx, info) {
+            const userExists = users.some((user) => user.id === args.author)
+            const postExists = posts.some((post) => {post.id === args.post && post.published})
+            
+            if(!postExists || !userExists) 
+                throw new Error('User or post does not exist')
+
+            const comment = {
+                id: uuidv4(), 
+                ...args
+            }
+
+            comments.push(comment)
+            return comment
+        }
+    },
     Post: {
         author(parent, args, ctx, info) {
             return users.find((user) => user.id === parent.author)
