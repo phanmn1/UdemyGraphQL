@@ -63,8 +63,8 @@ const Query = {
             published: true
         }
     }, 
-    comments() {
-        return db.comments
+    comments(arent, args, { prisma }, info) {
+        return prisma.query.comments(null, info)
     }
 }
 
