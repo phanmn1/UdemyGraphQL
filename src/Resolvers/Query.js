@@ -30,7 +30,7 @@ const Query = {
             after: args.after,
             orderBy: args.orderBy,
             where: {
-                published: truef
+                published: true
             }
         }
 
