@@ -5,6 +5,7 @@ import seedDatabase, { userOne } from './utils/seedDatabase'
 import getClient from './utils/getClient'
 import { createUser, getUsers, login, getProfile } from './utils/operations'
 
+jest.setTimeout(30000);
 
 const client = getClient()
 
@@ -33,7 +34,7 @@ test('should expose public author profiles', async () => {
 
     const response = await client.query({query: getUsers})
 
-    expect(response.data.users.length).toBe(1)
+    expect(response.data.users.length).toBe(2)
     expect(response.data.users[0].email).toBe(null)
     expect(response.data.users[0].name).toBe('Jen')
 })
